@@ -1,0 +1,17 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "maxWorkers": 1,
+  "moduleNameMapper": {
+    "^@config/(.*)$": "<rootDir>/../src/config/$1",
+    "^@domain-exceptions/(.*)$": "<rootDir>/../src/domain/common/exceptions/$1",
+    "^@data-source/(.*)$": "<rootDir>/../src/data-source/$1",
+    "^@domain/(.*)$": "<rootDir>/../src/domain/$1",
+    "^@infrastructure/(.*)$": "<rootDir>/../src/infrastructure/$1"
+  }
+}
