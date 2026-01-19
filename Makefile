@@ -19,8 +19,10 @@ restart:
 logs:
 	docker-compose logs -f app
 
-clean:
-	docker-compose down -v --rmi local
+clear:
+	docker-compose down -v
+	docker-compose -f docker-compose.test.yml down -v
+	-docker rmi task-manager-app task-manager-app-test 2>/dev/null || true
 
 # Testing
 test:
