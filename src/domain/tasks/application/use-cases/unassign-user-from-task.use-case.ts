@@ -3,6 +3,7 @@ import { Task } from '@domain/tasks/domain/task.entity';
 import { TaskRepository } from '@domain/tasks/application/ports/task.repository';
 import { AssignUserCommand } from '@domain/tasks/application/commands/assign-user.command';
 import { EntityNotFoundException } from '@domain-exceptions/entity-not-found.exception';
+import { UserNotAssignedException } from '@domain/tasks/domain/exceptions/user-not-assigned.exception';
 
 @Injectable()
 export class UnassignUserFromTaskUseCase {
@@ -14,6 +15,10 @@ export class UnassignUserFromTaskUseCase {
       throw new EntityNotFoundException('Task', command.taskId);
     }
 
-    return this.taskRepository.unassignUser(command.taskId, command.userId);
+    if (!task.hasAssignee(command.userId)) {
+      throw new UserNotAssignedException(command.taskId, command.userId);
+    }
+
+    return this.taskRepository.removeAssignee(command.taskId, command.userId);
   }
 }

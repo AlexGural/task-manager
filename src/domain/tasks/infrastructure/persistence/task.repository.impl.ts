@@ -6,15 +6,12 @@ import { Task } from '@domain/tasks/domain/task.entity';
 import { TaskRepository } from '@domain/tasks/application/ports/task.repository';
 import { TaskRecord } from '@domain/tasks/infrastructure/persistence/schema/task.record';
 import { TaskMapper } from '@domain/tasks/infrastructure/persistence/mappers/task.mapper';
-import { UserRecord } from '@domain/users/infrastructure/persistence/schema/user.record';
 
 @Injectable()
 export class TaskRepositoryImpl extends TaskRepository {
   constructor(
     @InjectRepository(TaskRecord)
     private readonly repo: Repository<TaskRecord>,
-    @InjectRepository(UserRecord)
-    private readonly userRepo: Repository<UserRecord>,
   ) {
     super();
   }
@@ -59,31 +56,23 @@ export class TaskRepositoryImpl extends TaskRepository {
     await this.repo.delete(id);
   }
 
-  async assignUser(taskId: UUID, userId: UUID): Promise<Task> {
-    const task = await this.repo.findOne({
-      where: { id: taskId },
-      relations: ['assignees'],
-    });
+  async addAssignee(taskId: UUID, userId: UUID): Promise<Task> {
+    await this.repo
+      .createQueryBuilder()
+      .relation(TaskRecord, 'assignees')
+      .of(taskId)
+      .add(userId);
 
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-
-    if (!task.assignees.some((u) => u.id === userId)) {
-      task.assignees.push(user);
-      await this.repo.save(task);
-    }
-
-    return TaskMapper.toDomain(task);
+    return this.findByIdWithAssignees(taskId);
   }
 
-  async unassignUser(taskId: UUID, userId: UUID): Promise<Task> {
-    const task = await this.repo.findOne({
-      where: { id: taskId },
-      relations: ['assignees'],
-    });
+  async removeAssignee(taskId: UUID, userId: UUID): Promise<Task> {
+    await this.repo
+      .createQueryBuilder()
+      .relation(TaskRecord, 'assignees')
+      .of(taskId)
+      .remove(userId);
 
-    task.assignees = task.assignees.filter((u) => u.id !== userId);
-    await this.repo.save(task);
-
-    return TaskMapper.toDomain(task);
+    return this.findByIdWithAssignees(taskId);
   }
 }

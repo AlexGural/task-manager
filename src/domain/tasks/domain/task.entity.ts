@@ -27,4 +27,8 @@ export class Task {
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
+
+  hasAssignee(userId: UUID): boolean {
+    return this.assigneeIds.includes(userId);
+  }
 }

@@ -86,6 +86,27 @@ describe('Task Assignment (e2e)', () => {
         .send({ userId: '123e4567-e89b-12d3-a456-426614174000' })
         .expect(404);
     });
+
+    it('should fail with 409 when user is already assigned', async () => {
+      const user = await createUser('user@example.com', 'User');
+      const task = await createTask('Task');
+
+      // First assignment
+      await request(app.getHttpServer())
+        .post(`/tasks/${task.id}/assignees`)
+        .set(API_TOKEN_HEADER)
+        .send({ userId: user.id })
+        .expect(201);
+
+      // Second assignment - should fail
+      const response = await request(app.getHttpServer())
+        .post(`/tasks/${task.id}/assignees`)
+        .set(API_TOKEN_HEADER)
+        .send({ userId: user.id })
+        .expect(409);
+
+      expect(response.body.code).toBe('USER_ALREADY_ASSIGNED');
+    });
   });
 
   describe('GET /tasks/:id/assignees', () => {
@@ -142,6 +163,18 @@ describe('Task Assignment (e2e)', () => {
         .delete('/tasks/123e4567-e89b-12d3-a456-426614174000/assignees/123e4567-e89b-12d3-a456-426614174001')
         .set(API_TOKEN_HEADER)
         .expect(404);
+    });
+
+    it('should fail with 422 when user is not assigned', async () => {
+      const user = await createUser('user@example.com', 'User');
+      const task = await createTask('Task');
+
+      const response = await request(app.getHttpServer())
+        .delete(`/tasks/${task.id}/assignees/${user.id}`)
+        .set(API_TOKEN_HEADER)
+        .expect(422);
+
+      expect(response.body.code).toBe('USER_NOT_ASSIGNED');
     });
   });
 

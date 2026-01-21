@@ -8,6 +8,6 @@ export abstract class TaskRepository {
   abstract findByIdWithAssignees(id: UUID): Promise<Task | null>;
   abstract update(task: Task): Promise<Task>;
   abstract delete(id: UUID): Promise<void>;
-  abstract assignUser(taskId: UUID, userId: UUID): Promise<Task>;
-  abstract unassignUser(taskId: UUID, userId: UUID): Promise<Task>;
+  abstract addAssignee(taskId: UUID, userId: UUID): Promise<Task>;
+  abstract removeAssignee(taskId: UUID, userId: UUID): Promise<Task>;
 }

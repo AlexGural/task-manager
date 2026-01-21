@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TaskRepository } from '@domain/tasks/application/ports/task.repository';
 import { TaskRepositoryImpl } from '@domain/tasks/infrastructure/persistence/task.repository.impl';
 import { TaskRecord } from '@domain/tasks/infrastructure/persistence/schema/task.record';
-import { UserRecord } from '@domain/users/infrastructure/persistence/schema/user.record';
 import { CreateTaskUseCase } from '@domain/tasks/application/use-cases/create-task.use-case';
 import { FindAllTasksUseCase } from '@domain/tasks/application/use-cases/find-all-tasks.use-case';
 import { FindTaskUseCase } from '@domain/tasks/application/use-cases/find-task.use-case';
@@ -17,7 +16,7 @@ import { UsersModule } from '@domain/users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TaskRecord, UserRecord]),
+    TypeOrmModule.forFeature([TaskRecord]),
     UsersModule,
   ],
   controllers: [TasksController],

@@ -6,6 +6,7 @@ import { Task } from '@domain/tasks/domain/task.entity';
 import { User } from '@domain/users/domain/user.entity';
 import { TaskStatusMap } from '@domain/tasks/domain/task-status';
 import { EntityNotFoundException } from '@domain-exceptions/entity-not-found.exception';
+import { UserAlreadyAssignedException } from '@domain/tasks/domain/exceptions/user-already-assigned.exception';
 
 describe('AssignUserToTaskUseCase', () => {
   let useCase: AssignUserToTaskUseCase;
@@ -20,8 +21,8 @@ describe('AssignUserToTaskUseCase', () => {
       findByIdWithAssignees: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-      assignUser: jest.fn(),
-      unassignUser: jest.fn(),
+      addAssignee: jest.fn(),
+      removeAssignee: jest.fn(),
     } as jest.Mocked<TaskRepository>;
 
     userRepository = {
@@ -43,6 +44,7 @@ describe('AssignUserToTaskUseCase', () => {
       title: 'Task',
       description: 'Description',
       status: TaskStatusMap.todo,
+      assigneeIds: [],
     });
     
     const user: User = {
@@ -61,23 +63,50 @@ describe('AssignUserToTaskUseCase', () => {
       assigneeIds: [userId],
     });
 
-    taskRepository.findById.mockResolvedValue(task);
+    taskRepository.findByIdWithAssignees.mockResolvedValue(task);
     userRepository.findById.mockResolvedValue(user);
-    taskRepository.assignUser.mockResolvedValue(taskWithAssignee);
+    taskRepository.addAssignee.mockResolvedValue(taskWithAssignee);
 
     const result = await useCase.execute({ taskId, userId });
 
-    expect(taskRepository.findById).toHaveBeenCalledWith(taskId);
+    expect(taskRepository.findByIdWithAssignees).toHaveBeenCalledWith(taskId);
     expect(userRepository.findById).toHaveBeenCalledWith(userId);
-    expect(taskRepository.assignUser).toHaveBeenCalledWith(taskId, userId);
+    expect(taskRepository.addAssignee).toHaveBeenCalledWith(taskId, userId);
     expect(result.assigneeIds).toContain(userId);
+  });
+
+  it('should throw UserAlreadyAssignedException if user already assigned', async () => {
+    const taskId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+    const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
+    
+    const task = new Task({
+      id: taskId,
+      title: 'Task',
+      description: 'Description',
+      status: TaskStatusMap.todo,
+      assigneeIds: [userId],
+    });
+    
+    const user: User = {
+      id: userId,
+      email: 'user@example.com',
+      name: 'User',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    taskRepository.findByIdWithAssignees.mockResolvedValue(task);
+    userRepository.findById.mockResolvedValue(user);
+
+    await expect(useCase.execute({ taskId, userId })).rejects.toThrow(UserAlreadyAssignedException);
+    expect(taskRepository.addAssignee).not.toHaveBeenCalled();
   });
 
   it('should throw EntityNotFoundException when task not found', async () => {
     const taskId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
     const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
-    taskRepository.findById.mockResolvedValue(null);
+    taskRepository.findByIdWithAssignees.mockResolvedValue(null);
 
     await expect(useCase.execute({ taskId, userId })).rejects.toThrow(EntityNotFoundException);
     await expect(useCase.execute({ taskId, userId })).rejects.toThrow(`Task with id: "${taskId}" not found`);
@@ -92,9 +121,10 @@ describe('AssignUserToTaskUseCase', () => {
       title: 'Task',
       description: 'Description',
       status: TaskStatusMap.todo,
+      assigneeIds: [],
     });
 
-    taskRepository.findById.mockResolvedValue(task);
+    taskRepository.findByIdWithAssignees.mockResolvedValue(task);
     userRepository.findById.mockResolvedValue(null);
 
     await expect(useCase.execute({ taskId, userId })).rejects.toThrow(EntityNotFoundException);

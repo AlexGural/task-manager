@@ -8,8 +8,7 @@ import {
 } from '@nestjs/common';
 import { FastifyReply } from 'fastify';
 import { DomainException } from '@domain-exceptions/domain.exception';
-import { EntityNotFoundException } from '@domain-exceptions/entity-not-found.exception';
-import { EntityAlreadyExistsException } from '@domain-exceptions/entity-already-exists.exception';
+import { DOMAIN_ERROR_HTTP_STATUS_MAP } from '@infrastructure/filters/domain-error-http-status.map';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -41,29 +40,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
     errors: string[];
     code?: string;
   } {
-    // Domain exceptions
-    if (exception instanceof EntityNotFoundException) {
-      return {
-        status: HttpStatus.NOT_FOUND,
-        message: 'Not Found',
-        errors: [exception.message],
-        code: exception.code,
-      };
-    }
-
-    if (exception instanceof EntityAlreadyExistsException) {
-      return {
-        status: HttpStatus.CONFLICT,
-        message: 'Conflict',
-        errors: [exception.message],
-        code: exception.code,
-      };
-    }
-
     if (exception instanceof DomainException) {
       return {
-        status: HttpStatus.BAD_REQUEST,
-        message: 'Domain Error',
+        status: DOMAIN_ERROR_HTTP_STATUS_MAP[exception.code] ?? HttpStatus.BAD_REQUEST,
+        message: exception.message,
         errors: [exception.message],
         code: exception.code,
       };

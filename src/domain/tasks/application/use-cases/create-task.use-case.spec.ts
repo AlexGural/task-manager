@@ -16,8 +16,8 @@ describe('CreateTaskUseCase', () => {
       findByIdWithAssignees: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-      assignUser: jest.fn(),
-      unassignUser: jest.fn(),
+      addAssignee: jest.fn(),
+      removeAssignee: jest.fn(),
     } as jest.Mocked<TaskRepository>;
 
     useCase = new CreateTaskUseCase(taskRepository);
